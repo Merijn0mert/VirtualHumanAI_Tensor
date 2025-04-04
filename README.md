@@ -1,2 +1,112 @@
-# VirtualHumanAI_Tensor
-Tensorflow ai for Virtual Human AI
+# Virtual Human – AI Health Companion
+
+## 🧠 Introduction
+
+**Virtual Human** is an AI project aimed at developing an accessible virtual assistant to support individuals with low health literacy. The assistant will guide users in understanding and managing their well-being by simplifying access to trusted health resources, such as those on the Dutch platform **"De Stap."**
+
+By engaging users in clear, step-by-step conversations, the AI filters and delivers personalized health content—helping users build healthier, more active lifestyles, without overwhelming them with information.
+
+---
+
+## 🎯 Purpose & Goals
+
+### The Problem  
+Despite the abundance of health content, many low-literate individuals in the Netherlands struggle to:
+- Understand complex text-based resources.
+- Know where to start.
+- Stay engaged on platforms like "De Stap."
+
+### The Vision  
+Create a **conversational AI assistant** that:
+- Engages users in a simple, intuitive flow.
+- Asks clear questions to understand needs.
+- Recommends relevant health resources.
+- Builds trust through personalized and visual communication.
+
+---
+
+## 🛠️ Key Features
+
+- 🤖 **AI-powered assistant** for guiding users.
+- 🗣️ **Simple, accessible dialogue** with the user.
+- 🧩 **Personalized content** recommendation.
+- 🌍 **Multilingual support** for better reach (optional future step).
+- 📈 **Engagement tracking** to evaluate performance.
+
+---
+
+## 🧪 Technical Overview
+
+- **AI Framework**: TensorFlow
+- **Model Type**: Natural Language Understanding (NLU) and Recommendation System
+- **Interface**: Chatbot (web-based or voice-assisted)
+- **Training Dataset**:
+  - Curated health texts from De Stap
+  - Synthetic dialogues simulating user queries
+  - Annotated low-literacy question/response pairs
+- **Deployment**: Standalone or integrated into the existing De Stap website
+
+---
+
+## 🧭 Implementation Plan
+
+1. **Data Collection**
+   - Source structured health content
+   - Analyze engagement patterns from "De Stap"
+2. **Model Training**
+   - Build and fine-tune conversational AI
+   - Train for classification and recommendation
+3. **Prototype & Test**
+   - MVP with basic health query navigation
+   - User testing and feedback loops
+4. **Iteration**
+   - Weekly updates (Friday check-ins)
+   - Refine based on engagement and usability metrics
+
+---
+
+## 📊 Measuring Success
+
+- ⏱️ Increased time spent on relevant pages
+- 📈 Higher click-through and interaction rates
+- ✅ Improved user understanding (measured via surveys or behavior)
+- 🧠 Ability to make independent health-related decisions
+
+---
+
+## 👥 Team Roles
+
+| Name               | Role                         |
+|--------------------|------------------------------|
+| Sam Deen           | Team Leader / Secondary Notes|
+| Merijn Wilgehof    | Spokesperson / Primary Notes |
+| Viktor Velizarov   | Scrum Master                 |
+| Mahmoud Turkmani   | Quality Assurance            |
+
+---
+
+## 💰 Budget
+
+| Item       			| Cost Estimate                     		|
+|-----------------------|-------------------------------------------|
+| AI Model   			| ~€4.50/month per user *(10 requests/day)*	|
+| Hosting, Infra, etc. 	| TBD based on scale            			|
+
+---
+
+## 📌 Questions Still To Address
+
+- What AI architecture is best (transformer vs. simpler models)?
+- How to monitor user comprehension in real-time?
+- Is a voice assistant more effective than text for this audience?
+- What privacy measures are necessary?
+
+---
+
+## ✅ Conclusion
+
+The Virtual Human project is more than a digital assistant—it’s a **gateway to health empowerment**. By combining TensorFlow-based AI with a user-friendly interface, it aims to break down health information barriers and encourage healthier lifestyles for everyone, regardless of literacy level.
+
+---
+
+Let me know if you want to turn this into a GitHub project page or want a version with badges, visuals, or setup instructions!
