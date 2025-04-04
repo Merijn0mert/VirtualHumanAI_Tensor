@@ -107,6 +107,3 @@ Create a **conversational AI assistant** that:
 
 The Virtual Human project is more than a digital assistant—it’s a **gateway to health empowerment**. By combining TensorFlow-based AI with a user-friendly interface, it aims to break down health information barriers and encourage healthier lifestyles for everyone, regardless of literacy level.
 
----
-
-Let me know if you want to turn this into a GitHub project page or want a version with badges, visuals, or setup instructions!
