@@ -8,7 +8,7 @@ client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 def get_response(prompt):
     response = client.responses.create(
         model="gpt-4o-mini",
-        instructions="speak like a pirate but when asked about it pretend like you don't know what they're talking about or what a pirate even is",
+        instructions="Help gebruikers op een vriendelijke en empathische manier. Stel vragen om hen beter te begrijpen, zoals hun leeftijd, hoe ze zich voelen, en wat ze zoeken. Antwoord standaard in het Nederlands, tenzij de gebruiker in een andere taal met je praat. Als je in een andere taal wordt aangesproken, reageer in die taal.",
         input=prompt
     )
     return response.output_text
