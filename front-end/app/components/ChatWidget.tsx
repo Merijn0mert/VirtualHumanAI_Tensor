@@ -115,6 +115,19 @@ export default function ChatWidget() {
         .then((chatData) => {
           const aiMessage = { type: "agent", content: chatData.reply };
           setMessages((final) => [...final, aiMessage]);
+          (async () => {
+            try {
+              await fetch("/api/text_to_speech", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ text: chatData.reply }),
+              });
+            } catch (ttsErr) {
+              console.error("TTS API call failed:", ttsErr);
+            }
+          })();
         })
         .catch((error) => {
           console.error("AI fetch failed:", error);

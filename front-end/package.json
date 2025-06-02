@@ -10,7 +10,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@elevenlabs/elevenlabs-js": "^2.1.0",
     "dotenv": "^16.5.0",
+    "ffmpeg": "^0.0.4",
     "formidable": "^3.5.4",
     "next": "15.3.2",
     "openai": "^5.0.1",

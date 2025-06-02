@@ -1,25 +1,27 @@
-import { OpenAI } from "openai";
-import type { NextApiRequest, NextApiResponse } from "next";
+import { ElevenLabsClient, play } from "@elevenlabs/elevenlabs-js";
+import dotenv from "dotenv";
+dotenv.config();
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+export const speakWithElevenLabs = async (text: string) => {
+  const apiKey = process.env.ELEVENLABS_API_KEY || ""; // Or use private var on backend
+  const voiceId = "JBFqnCBsd6RMkjVDRZzb"; // Adjust as needed
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { text } = req.body;
-  if (!text) return res.status(400).json({ error: "Missing text." });
-
+  if (!apiKey) {
+    console.error("ElevenLabs API key is missing.");
+    return;
+  }
+const elevenlabs = new ElevenLabsClient({
+    apiKey: apiKey,
+});
   try {
-    const mp3 = await openai.audio.speech.create({
-      model: "tts-1",
-      voice: "nova",
-      input: text,
-    });
+    const audio = await elevenlabs.textToSpeech.convert("JBFqnCBsd6RMkjVDRZzb", {
+    text: text,
+    modelId: "eleven_multilingual_v2",
+});
 
-    const buffer = Buffer.from(await mp3.arrayBuffer());
-
-    res.setHeader("Content-Type", "audio/mpeg");
-    res.send(buffer);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Speech generation failed." });
+    await play(audio);
+}
+  catch(err){
+  console.error(`AAAAAAAAAH I JUST SHIT MYSELF AND GOT ${err} PLEASE SOMEONE SAVE ME`)
   }
 }
