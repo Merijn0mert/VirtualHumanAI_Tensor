@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 
 const emojis = ["😊", "🙂", "😐", "😕", "😢"];
 
@@ -15,20 +14,37 @@ export default function ChatWidget() {
   ]);
   const [inputValue, setInputValue] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim()) return;
 
-    setMessages([...messages, { type: "user", content: inputValue }]);
+    const userMessage = { type: "user", content: inputValue };
+    setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      // Use your actual API route here (likely "/api/chat")
+      const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: inputValue, history: messages.map(m => ({
+          role: m.type === "user" ? "user" : "assistant",
+          content: m.content,
+        })) }),
+      });
+
+      const data = await res.json();
+
+      // Assuming your API responds with { reply: "text" }
+      const aiMessage = { type: "agent", content: data.reply };
+      setMessages((prev) => [...prev, aiMessage]);
+    } catch (error) {
+      console.error("AI fetch failed:", error);
       setMessages((prev) => [
         ...prev,
-        { type: "agent", content: "You seem a bit worried" },
+        { type: "agent", content: "Er ging iets mis. Probeer het later opnieuw." },
       ]);
-    }, 1000);
+    }
   };
 
   if (!isOpen) {

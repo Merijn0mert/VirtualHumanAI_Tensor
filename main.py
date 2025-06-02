@@ -15,6 +15,11 @@ def record_audio(filename="input.wav", duration=5, fs=44100):
     print("Done.")
     return filename
 
+def record_audio_stream(filename="input.wav"):
+    print("Recording...")
+
+
+
 def add_to_memory(user="None", text=""):
     global conversation_history
     conversation_history += f"{user}: {text}\n"

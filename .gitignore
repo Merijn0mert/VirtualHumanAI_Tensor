@@ -321,11 +321,11 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+front-end/.env
 .venv
-.env/
+front-end/.env/
 venv/
-.env/
+front-end/.env/
 env.bak/
 venv.bak/
 
