@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 const emojis = ["😊", "🙂", "😐", "😕", "😢"];
 
@@ -13,6 +13,10 @@ export default function ChatWidget() {
     },
   ]);
   const [inputValue, setInputValue] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
+
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,19 +27,19 @@ export default function ChatWidget() {
     setInputValue("");
 
     try {
-      // Use your actual API route here (likely "/api/chat")
       const res = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: inputValue, history: messages.map(m => ({
-          role: m.type === "user" ? "user" : "assistant",
-          content: m.content,
-        })) }),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: inputValue,
+          history: messages.map((m) => ({
+            role: m.type === "user" ? "user" : "assistant",
+            content: m.content,
+          })),
+        }),
       });
 
       const data = await res.json();
-
-      // Assuming your API responds with { reply: "text" }
       const aiMessage = { type: "agent", content: data.reply };
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
@@ -46,6 +50,87 @@ export default function ChatWidget() {
       ]);
     }
   };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      recordedChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(recordedChunksRef.current, { type: "audio/webm" });
+        sendAudioToAPI(audioBlob);
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+
+      setTimeout(() => {
+        mediaRecorder.stop();
+        setIsRecording(false);
+      }, 5000); // Auto-stop after 5s
+    } catch (err) {
+      console.error("Microphone access denied or error:", err);
+    }
+  };
+
+  const sendAudioToAPI = async (audioBlob: Blob) => {
+  const formData = new FormData();
+  formData.append("file", audioBlob, "voice-message.webm");
+
+  try {
+    const res = await fetch("/api/speech_to_text", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await res.json();
+    console.log("Speech-to-text result:", data);
+
+    const transcript = data.transcript;
+    const userMessage = { type: "user", content: transcript };
+
+    setMessages((prev) => {
+      const updated = [...prev, userMessage];
+      // Immediately send to chat endpoint
+      fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: transcript,
+          history: updated.map((m) => ({
+            role: m.type === "user" ? "user" : "assistant",
+            content: m.content,
+          })),
+        }),
+      })
+        .then((res) => res.json())
+        .then((chatData) => {
+          const aiMessage = { type: "agent", content: chatData.reply };
+          setMessages((final) => [...final, aiMessage]);
+        })
+        .catch((error) => {
+          console.error("AI fetch failed:", error);
+          setMessages((final) => [
+            ...final,
+            { type: "agent", content: "Er ging iets mis. Probeer het later opnieuw." },
+          ]);
+        });
+
+      return updated;
+    });
+  } catch (error) {
+    console.error("Speech API failed:", error);
+  }
+};
+
 
   if (!isOpen) {
     return (

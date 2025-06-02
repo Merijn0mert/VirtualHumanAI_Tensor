@@ -1,5 +1,3 @@
-// app/AI/chat.ts
-
 import OpenAI  from "openai";
 import dotenv from "dotenv";
 

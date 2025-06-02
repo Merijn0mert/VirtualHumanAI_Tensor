@@ -1,12 +1,16 @@
 import formidable from "formidable";
 import fs from "fs";
-import { OpenAI } from "openai";
 import type { NextApiRequest, NextApiResponse } from "next";
 
-export const config = { api: { bodyParser: false } };
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+import OpenAI  from "openai";
+import dotenv from "dotenv";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+dotenv.config();
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY});
+
+export async function speechHandler(req: NextApiRequest, res: NextApiResponse) {
+
+
   const form = new formidable.IncomingForm();
   form.parse(req, async (err, fields, files) => {
     if (err) return res.status(500).json({ error: "File parsing error." });

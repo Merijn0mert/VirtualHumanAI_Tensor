@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { speechHandler } from "@/app/AI/speech_to_text";
+import { chatHandler } from "@/app/AI/chat";
 
 export async function POST(req: Request) {
   try {
@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     }
 
     // Call your AI handler with prompt and history
-    const reply = await speechHandler(prompt, history);
+    const reply = await chatHandler(prompt, history);
 
     return NextResponse.json({ reply });
   } catch (error) {
