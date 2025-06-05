@@ -46,7 +46,10 @@ export default function ChatWidget() {
       console.error("AI fetch failed:", error);
       setMessages((prev) => [
         ...prev,
-        { type: "agent", content: "Er ging iets mis. Probeer het later opnieuw." },
+        {
+          type: "agent",
+          content: "Er ging iets mis. Probeer het later opnieuw.",
+        },
       ]);
     }
   };
@@ -65,7 +68,9 @@ export default function ChatWidget() {
       };
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(recordedChunksRef.current, { type: "audio/webm" });
+        const audioBlob = new Blob(recordedChunksRef.current, {
+          type: "audio/webm",
+        });
         sendAudioToAPI(audioBlob);
       };
 
@@ -82,68 +87,70 @@ export default function ChatWidget() {
   };
 
   const sendAudioToAPI = async (audioBlob: Blob) => {
-  const formData = new FormData();
-  formData.append("file", audioBlob, "voice-message.webm");
+    const formData = new FormData();
+    formData.append("file", audioBlob, "voice-message.webm");
 
-  try {
-    const res = await fetch("/api/speech_to_text", {
-      method: "POST",
-      body: formData,
-    });
-
-    const data = await res.json();
-    console.log("Speech-to-text result:", data);
-
-    const transcript = data.transcript;
-    const userMessage = { type: "user", content: transcript };
-
-    setMessages((prev) => {
-      const updated = [...prev, userMessage];
-      // Immediately send to chat endpoint
-      fetch("/api/chat", {
+    try {
+      const res = await fetch("/api/speech_to_text", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: transcript,
-          history: updated.map((m) => ({
-            role: m.type === "user" ? "user" : "assistant",
-            content: m.content,
-          })),
-        }),
-      })
-        .then((res) => res.json())
-        .then((chatData) => {
-          const aiMessage = { type: "agent", content: chatData.reply };
-          setMessages((final) => [...final, aiMessage]);
-          (async () => {
-            try {
-              await fetch("/api/text_to_speech", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ text: chatData.reply }),
-              });
-            } catch (ttsErr) {
-              console.error("TTS API call failed:", ttsErr);
-            }
-          })();
+        body: formData,
+      });
+      console.log("HUUUIII", res);
+      const data = await res.json();
+
+      const transcript = data.transcript;
+      console.log(transcript);
+      const userMessage = { type: "user", content: transcript };
+
+      setMessages((prev) => {
+        const updated = [...prev, userMessage];
+        // Immediately send to chat endpoint
+        fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: transcript,
+            history: updated.map((m) => ({
+              role: m.type === "user" ? "user" : "assistant",
+              content: m.content,
+            })),
+          }),
         })
-        .catch((error) => {
-          console.error("AI fetch failed:", error);
-          setMessages((final) => [
-            ...final,
-            { type: "agent", content: "Er ging iets mis. Probeer het later opnieuw." },
-          ]);
-        });
+          .then((res) => res.json())
+          .then((chatData) => {
+            const aiMessage = { type: "agent", content: chatData.reply };
+            setMessages((final) => [...final, aiMessage]);
+            (async () => {
+              try {
+                await fetch("/api/text_to_speech", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ text: chatData.reply }),
+                });
+              } catch (ttsErr) {
+                console.error("TTS API call failed:", ttsErr);
+              }
+            })();
+          })
+          .catch((error) => {
+            console.error("AI fetch failed:", error);
+            setMessages((final) => [
+              ...final,
+              {
+                type: "agent",
+                content: "Er ging iets mis. Probeer het later opnieuw.",
+              },
+            ]);
+          });
 
-      return updated;
-    });
-  } catch (error) {
-    console.error("Speech API failed:", error);
-  }
-};
-
+        return updated;
+      });
+    } catch (error) {
+      console.error("Speech API failed:", error);
+    }
+  };
 
   if (!isOpen) {
     return (
@@ -239,26 +246,52 @@ export default function ChatWidget() {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Type a message..."
-            className="w-full bg-navy-700 text-white rounded-full py-2 px-4 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full bg-navy-700 text-white rounded-full py-2 px-4 pr-20 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <button
-            type="submit"
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-blue-500 hover:text-blue-400"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex gap-1">
+            <button
+              type="button"
+              onClick={startRecording}
+              disabled={isRecording}
+              className={`p-1 rounded-full transition-colors ${
+                isRecording
+                  ? "text-red-500 bg-red-100"
+                  : "text-gray-400 hover:text-green-400"
+              }`}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-              />
-            </svg>
-          </button>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                />
+              </svg>
+            </button>
+            <button
+              type="submit"
+              className="p-1 text-blue-500 hover:text-blue-400 transition-colors"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
       </form>
     </div>

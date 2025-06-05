@@ -1,20 +1,40 @@
-import { NextResponse } from "next/server";
-import { chatHandler } from "@/app/AI/chat";
+import { NextRequest, NextResponse } from "next/server";
+import OpenAI from "openai";
 
-export async function POST(req: Request) {
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+export async function POST(req: NextRequest) {
   try {
-    const { prompt, history } = await req.json();
+    const formData = await req.formData();
+    const file = formData.get("file") as File;
 
-    if (!prompt) {
-      return NextResponse.json({ error: "Missing prompt" }, { status: 400 });
+    if (!file) {
+      return NextResponse.json(
+        { error: "No audio file received" },
+        { status: 400 }
+      );
     }
 
-    // Call your AI handler with prompt and history
-    const reply = await chatHandler(prompt, history);
+    // Convert File to Buffer for OpenAI
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
-    return NextResponse.json({ reply });
+    // Create a File-like object that OpenAI expects
+    const audioFile = new File([buffer], file.name, { type: file.type });
+
+    const transcript = await openai.audio.transcriptions.create({
+      file: audioFile,
+      model: "whisper-1",
+    });
+
+    return NextResponse.json({ transcript: transcript.text });
   } catch (error) {
-    console.error("Chat API error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    console.error("Speech-to-text API error:", error);
+    return NextResponse.json(
+      { error: "Transcription failed" },
+      { status: 500 }
+    );
   }
 }
