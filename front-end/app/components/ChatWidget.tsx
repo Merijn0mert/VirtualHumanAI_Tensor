@@ -95,60 +95,58 @@ export default function ChatWidget() {
         method: "POST",
         body: formData,
       });
-      console.log("HUUUIII", res);
       const data = await res.json();
 
       const transcript = data.transcript;
       console.log(transcript);
       const userMessage = { type: "user", content: transcript };
 
-      setMessages((prev) => {
-        const updated = [...prev, userMessage];
-        // Immediately send to chat endpoint
-        fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            prompt: transcript,
-            history: updated.map((m) => ({
-              role: m.type === "user" ? "user" : "assistant",
-              content: m.content,
-            })),
-          }),
-        })
-          .then((res) => res.json())
-          .then((chatData) => {
-            const aiMessage = { type: "agent", content: chatData.reply };
-            setMessages((final) => [...final, aiMessage]);
-            (async () => {
-              try {
-                await fetch("/api/text_to_speech", {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({ text: chatData.reply }),
-                });
-              } catch (ttsErr) {
-                console.error("TTS API call failed:", ttsErr);
-              }
-            })();
-          })
-          .catch((error) => {
-            console.error("AI fetch failed:", error);
-            setMessages((final) => [
-              ...final,
-              {
-                type: "agent",
-                content: "Er ging iets mis. Probeer het later opnieuw.",
-              },
-            ]);
-          });
+      // Add user message first
+      setMessages((prev) => [...prev, userMessage]);
 
-        return updated;
+      // Get current history for the chat API call
+      const currentHistory = messages.concat(userMessage).map((m) => ({
+        role: m.type === "user" ? "user" : "assistant",
+        content: m.content,
+      }));
+
+      // Send to chat endpoint
+      const chatRes = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: transcript,
+          history: currentHistory,
+        }),
       });
+
+      const chatData = await chatRes.json();
+      const aiMessage = { type: "agent", content: chatData.reply };
+
+      // Add AI response
+      setMessages((prev) => [...prev, aiMessage]);
+
+      // Optional: Text-to-speech
+      try {
+        await fetch("/api/text_to_speech", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ text: chatData.reply }),
+        });
+      } catch (ttsErr) {
+        console.error("TTS API call failed:", ttsErr);
+      }
     } catch (error) {
       console.error("Speech API failed:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          type: "agent",
+          content: "Er ging iets mis. Probeer het later opnieuw.",
+        },
+      ]);
     }
   };
 
