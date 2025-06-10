@@ -1,9 +1,32 @@
 import OpenAI  from "openai";
 import dotenv from "dotenv";
+import * as XLSX from 'xlsx';
+import path from "path";
+
 
 dotenv.config();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY});
+const excelPath = path.join(process.cwd(), "app", "data", "DE-STAP-Export-2025-May-23-1039.xlsx");
 
+function loadLinksFromExcel(filePath: string) {
+  if (!fs.existsSync(filePath)) {
+    console.error(`❌ Excel file not found: ${filePath}`);
+    return {};
+  }
+  const workbook = XLSX.readFile(path);
+  const sheetName = workbook.SheetNames[0];
+  const sheet = workbook.Sheets[sheetName];
+  const data = XLSX.utils.sheet_to_json(sheet);
+  const categorizedLinks: Record<string, { Link: string; Description: string }[]> = {};
+
+  for (const row of data) {
+    const category = row['Category']; // must exactly match [g], [m], etc.
+    console.log(category);
+    if (!categorizedLinks[category]) categorizedLinks[category] = [];
+    categorizedLinks[category].push({ Link: row['Link'], Description: row['Description'] });
+  }
+  return categorizedLinks;
+}
 export async function chatHandler(prompt: string, history: any[] = []) {
   const messages = [
     {
