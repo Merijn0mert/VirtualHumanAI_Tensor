@@ -1,4 +1,5 @@
 import { ElevenLabsClient, play } from "@elevenlabs/elevenlabs-js";
+import { Readable } from "stream";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -18,10 +19,21 @@ const elevenlabs = new ElevenLabsClient({
     text: text,
     modelId: "eleven_multilingual_v2",
 });
-
-    await play(audio);
+const readableAudio = Readable.from(audio);
+const audioBuffer = await streamToBuffer(readableAudio);
+return audioBuffer;
 }
   catch(err){
   console.error(`AAAAAAAAAH I JUST SHIT MYSELF AND GOT ${err} PLEASE SOMEONE SAVE ME`)
+  return null;
   }
+}
+
+async function streamToBuffer(stream: Readable): Promise<Buffer> {
+  const chunks: Uint8Array[] = [];
+  return new Promise((resolve, reject) => {
+    stream.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+    stream.on("error", reject);
+    stream.on("end", () => resolve(Buffer.concat(chunks)));
+  });
 }
