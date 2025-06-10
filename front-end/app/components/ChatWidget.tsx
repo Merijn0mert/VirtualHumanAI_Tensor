@@ -1,8 +1,19 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
 const emojis = ["😊", "🙂", "😐", "😕", "😢"];
+
+// Map color codes to hex values
+const COLOR_MAP: Record<string, string> = {
+  g: "#DE2B37", // red
+  m: "#50C4EE", // blue
+  z: "#6F47D1", // purple
+  k: "#FFC823", // yellow
+  c: "#FF7A1A", // orange
+  j: "#00D16B", // green
+  d: "#001F3F" // navy/default
+};
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,8 +26,42 @@ export default function ChatWidget() {
   const [inputValue, setInputValue] = useState("");
   const [isRecording, setIsRecording] = useState(false);
 
+  // Keep track of last 3 gradient colors for header
+  const [gradientColors, setGradientColors] = useState<string[]>([
+    COLOR_MAP.d,
+    COLOR_MAP.d,
+    COLOR_MAP.d,
+  ]);
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
+
+  // Helper to extract color code from bot message, e.g. "[g]"
+  const extractColorCode = (text: string): string | null => {
+    const match = text.match(/\[([gmzkcj])\]/i);
+    if (match && COLOR_MAP[match[1].toLowerCase()]) {
+      return COLOR_MAP[match[1].toLowerCase()];
+    }
+    return null;
+  };
+
+  // When messages change, check last bot message for color code and update gradientColors
+  useEffect(() => {
+    const lastBotMessage = [...messages].reverse().find((m) => m.type === "agent");
+    if (!lastBotMessage) return;
+
+    const color = extractColorCode(lastBotMessage.content);
+    if (color) {
+      setGradientColors((prevColors) => {
+        // Prevent duplicates in a row
+        if (prevColors[prevColors.length - 1] === color) return prevColors;
+
+        const newColors = [...prevColors, color];
+        if (newColors.length > 3) newColors.shift();
+        return newColors;
+      });
+    }
+  }, [messages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,10 +218,18 @@ export default function ChatWidget() {
     );
   }
 
+  // Create dynamic gradient style from colors array
+  const gradientStyle = {
+    background: `linear-gradient(90deg, ${gradientColors.join(", ")})`,
+  };
+
   return (
     <div className="fixed bottom-6 right-6 w-[350px] bg-navy-900 rounded-lg shadow-xl">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-navy-700">
+      <div
+        className="flex items-center justify-between p-4 rounded-t-lg"
+        style={gradientStyle}
+      >
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-navy-700 rounded-full"></div>
           <div>

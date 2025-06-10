@@ -8,8 +8,15 @@ export async function chatHandler(prompt: string, history: any[] = []) {
   const messages = [
     {
       role: "system",
-      content:
-        "Help gebruikers op een vriendelijke en empathische manier. Stel vragen om hen beter te begrijpen, zoals hun leeftijd, hoe ze zich voelen, en wat ze zoeken. Antwoord standaard in het Nederlands, tenzij de gebruiker in een andere taal met je praat. Als je in een andere taal wordt aangesproken, reageer in die taal.",
+      content: `
+        you have to return the following and the following only,
+        if a user in the current message is talking about their health and fitness (think of topics like eating healthy, sleeping well, stay fit, dealing with illness, smoking, alcohol, drugs, gambling, sex and intemecy) return '[g]'
+        if a user in the current message is talking about their mental health (think of topics like less stress, coming up for yourself, dealing with setbacks, healthy brain, happy with yourself) return '[m]'
+        if a user in the current message is talking about their meaningful life (think of your own life, work, learning, getting your shit together, after your pension) return '[z]'
+        if a user in the current message is talking about their quality of life (think of staying in balance, enjoying, feeling safe) return '[k]'
+        if a user in the current message is talking about their contact with others (think of topics like staying in contact, elder care, difference between people, paricipating in the neighbourhood, volunteer work) return '[c]'
+        if a user in the current message is talking about caring about themselves (think of topics like handling money, deviding their time, raising kids, being able to live on their own, using computers) return '[j]'
+      `
     },
     ...history,
     { role: "user", content: prompt },
