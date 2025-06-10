@@ -44,6 +44,7 @@ export default function ChatWidget() {
     }
     return null;
   };
+  const removeColorCode = (text: string) => text.replace(/\[[gmzkcj]\]/gi, "").trim();
 
   // When messages change, check last bot message for color code and update gradientColors
   useEffect(() => {
@@ -85,7 +86,7 @@ export default function ChatWidget() {
       });
 
       const data = await res.json();
-      const aiMessage = { type: "agent", content: data.reply };
+      const aiMessage = { type: "agent", content: removeColorCode(data.reply) };
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
       console.error("AI fetch failed:", error);
@@ -166,7 +167,7 @@ export default function ChatWidget() {
       });
 
       const chatData = await chatRes.json();
-      const aiMessage = { type: "agent", content: chatData.reply };
+      const aiMessage = { type: "agent", content: removeColorCode(chatData.reply) };
 
       // Add AI response
       setMessages((prev) => [...prev, aiMessage]);
