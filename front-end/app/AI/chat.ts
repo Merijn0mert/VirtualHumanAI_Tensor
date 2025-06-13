@@ -18,7 +18,7 @@ type ExcelRow = {
   [key: string]: any; // For Column 24 or any extra columns
 };
 
-function loadLinksFromExcel(filePath: string) {
+/*function loadLinksFromExcel(filePath: string) {
   if (!fs.existsSync(filePath)) {
     console.error(`❌ Excel file not found: ${filePath}`);
     return {};
@@ -59,7 +59,7 @@ function loadLinksFromExcel(filePath: string) {
     if (row[24] === categoryCodeMap[zooi]) {
       console.log('first row ', row[24],': ', row[1]); // First column
     }
-  });
+  });*/
 
 
   /*for (const row of data) {
@@ -85,7 +85,7 @@ function loadLinksFromExcel(filePath: string) {
     }
     return categorizedLinks;
   }*/
-}
+//}
 
 // Load once at startup
   //const categorizedLinks = loadLinksFromExcel(excelPath);
