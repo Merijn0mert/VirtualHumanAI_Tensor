@@ -44,6 +44,7 @@ export default function ChatWidget() {
     }
     return null;
   };
+  const removeColorCode = (text: string) => text.replace(/\[[gmzkcj]\]/gi, "").trim();
 
   // When messages change, check last bot message for color code and update gradientColors
   useEffect(() => {
@@ -196,18 +197,40 @@ export default function ChatWidget() {
 
       setMessages(updatedMessages);
 
-      // Optional: Text-to-speech
+
+      const playAudioFromApi = async (text: string) => {
       try {
-        await fetch("/api/text_to_speech", {
+        const res = await fetch("/api/text_to_speech", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ text: chatData.reply }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
         });
-      } catch (ttsErr) {
-        console.error("TTS API call failed:", ttsErr);
+
+        if (!res.ok) {
+          throw new Error("TTS API error");
+        }
+
+        // Get audio as Blob
+        const audioBlob = await res.blob();
+
+        // Create URL for audio playback
+        const audioUrl = URL.createObjectURL(audioBlob);
+
+        // Play audio using Audio API
+        const audio = new Audio(audioUrl);
+        audio.play();
+
+        // Optional: revoke URL after playback to free memory
+        audio.onended = () => {
+          URL.revokeObjectURL(audioUrl);
+        };
+      } catch (err) {
+        console.error("Failed to play audio:", err);
       }
+    };
+
+      // Optional: Text-to-speech
+      await playAudioFromApi(chatData.reply);
     } catch (error) {
       console.error("Speech API failed:", error);
       setMessages((prev) => [
