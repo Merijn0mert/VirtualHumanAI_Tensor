@@ -156,7 +156,7 @@ export default function ChatWidget() {
       setTimeout(() => {
         mediaRecorder.stop();
         setIsRecording(false);
-      }, 5000);
+      }, 8000);
     } catch (err) {
       console.error("Microphone access denied or error:", err);
     }
@@ -203,14 +203,14 @@ export default function ChatWidget() {
       }
       let combinedContent = chatData.reply.message;
 
-      if (chatData.article) {
-        combinedContent += `\n\n📄 <a href="${chatData.article.link}" target="_blank" class="underline text-blue-300">${chatData.article.title}</a>`;
+      if (chatData.reply.article) {
+        combinedContent += `\n\n📄 <a href="${chatData.reply.article.link}" target="_blank" class="underline text-blue-300">${chatData.reply.article.title}</a>`;
       }
 
       const aiMessage: Message = {
         type: "agent",
         content: combinedContent,
-        isHTML: !!chatData.article,
+        isHTML: !!chatData.reply.article,
       };
 
       setMessages((prev) => [...prev, aiMessage]);

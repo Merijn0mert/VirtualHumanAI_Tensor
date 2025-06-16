@@ -1,6 +1,7 @@
-import { ElevenLabsClient, play } from "@elevenlabs/elevenlabs-js";
-import { Readable } from "stream";
+import {ElevenLabsClient} from "@elevenlabs/elevenlabs-js";
+import {Readable} from "stream";
 import dotenv from "dotenv";
+
 dotenv.config();
 
 export const speakWithElevenLabs = async (text: string) => {
@@ -15,13 +16,12 @@ const elevenlabs = new ElevenLabsClient({
     apiKey: apiKey,
 });
   try {
-    const audio = await elevenlabs.textToSpeech.convert("JBFqnCBsd6RMkjVDRZzb", {
+    const audio = await elevenlabs.textToSpeech.convert(voiceId, {
     text: text,
     modelId: "eleven_multilingual_v2",
 });
 const readableAudio = Readable.from(audio);
-const audioBuffer = await streamToBuffer(readableAudio);
-return audioBuffer;
+    return await streamToBuffer(readableAudio);
 }
   catch(err){
   console.error(`AAAAAAAAAH I JUST SHIT MYSELF AND GOT ${err} PLEASE SOMEONE SAVE ME`)
