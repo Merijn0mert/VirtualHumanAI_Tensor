@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
+import avatar from "../../public/avatar.png";
+import Image from "next/image";
 
 const emojis = ["😊", "🙂", "😐", "😕", "😢"];
 
@@ -49,7 +51,9 @@ export default function ChatWidget() {
   };
 
   useEffect(() => {
-    const lastBotMessage = [...messages].reverse().find((m) => m.type === "agent");
+    const lastBotMessage = [...messages]
+      .reverse()
+      .find((m) => m.type === "agent");
     if (!lastBotMessage) return;
 
     const color = extractColorCode(lastBotMessage.content);
@@ -85,19 +89,21 @@ export default function ChatWidget() {
       });
 
       const data = await res.json();
-      const color = extractColorCode(data.reply.colorCode)
+      const color = extractColorCode(data.reply.colorCode);
       if (color) {
-      setGradientColors((prevColors) => {
-        if (prevColors[prevColors.length - 1] === color) return prevColors;
-        const newColors = [...prevColors, color];
-        if (newColors.length > 3) newColors.shift();
-        return newColors;
-      });
-    }
+        setGradientColors((prevColors) => {
+          if (prevColors[prevColors.length - 1] === color) return prevColors;
+          const newColors = [...prevColors, color];
+          if (newColors.length > 3) newColors.shift();
+          return newColors;
+        });
+      }
       const replyContent =
         typeof data.reply === "string" ? data.reply : data.reply.message;
       const articleData =
-        typeof data.reply === "object" && data.reply.article ? data.reply.article : null;
+        typeof data.reply === "object" && data.reply.article
+          ? data.reply.article
+          : null;
 
       let combinedContent = replyContent;
 
@@ -186,7 +192,15 @@ export default function ChatWidget() {
       });
 
       const chatData = await chatRes.json();
-
+      const color = extractColorCode(chatData.reply.colorCode);
+      if (color) {
+        setGradientColors((prevColors) => {
+          if (prevColors[prevColors.length - 1] === color) return prevColors;
+          const newColors = [...prevColors, color];
+          if (newColors.length > 3) newColors.shift();
+          return newColors;
+        });
+      }
       let combinedContent = chatData.reply.message;
 
       if (chatData.article) {
@@ -261,17 +275,30 @@ export default function ChatWidget() {
 
   return (
     <div className="fixed bottom-6 right-6 w-[350px] bg-navy-900 rounded-lg shadow-xl">
-      <div className="flex items-center justify-between p-4 rounded-t-lg " style={gradientStyle}>
+      <div
+        className="flex items-center justify-between p-4 rounded-t-lg "
+        style={gradientStyle}
+      >
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-navy-700 rounded-full"></div>
+          <Image src={avatar} alt="avatar" className="w-8 h-8 rounded-full" />
           <div>
             <h3 className="text-white font-medium">Janick</h3>
             <p className="text-xs text-white">De stap AI agent</p>
           </div>
         </div>
-        <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        <button onClick={() => setIsOpen(false)} className="text-white">
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -280,7 +307,9 @@ export default function ChatWidget() {
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
+            className={`flex ${
+              message.type === "user" ? "justify-end" : "justify-start"
+            }`}
           >
             <div
               className={`max-w-[80%] rounded-lg p-3 ${
@@ -299,7 +328,10 @@ export default function ChatWidget() {
         ))}
         <div className="flex flex-wrap gap-2 justify-center">
           {emojis.map((emoji, index) => (
-            <button key={index} className="w-8 h-8 flex items-center justify-center hover:bg-navy-700 rounded-full">
+            <button
+              key={index}
+              className="w-8 h-8 flex items-center justify-center hover:bg-navy-700 rounded-full"
+            >
               {emoji}
             </button>
           ))}
@@ -321,10 +353,17 @@ export default function ChatWidget() {
               onClick={startRecording}
               disabled={isRecording}
               className={`p-1 rounded-full transition-colors ${
-                isRecording ? "text-red-500 bg-red-100" : "text-gray-400 hover:text-green-400"
+                isRecording
+                  ? "text-red-500 bg-red-100"
+                  : "text-gray-400 hover:text-green-400"
               }`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -333,9 +372,22 @@ export default function ChatWidget() {
                 />
               </svg>
             </button>
-            <button type="submit" className="p-1 text-blue-500 hover:text-blue-400 transition-colors">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            <button
+              type="submit"
+              className="p-1 text-blue-500 hover:text-blue-400 transition-colors"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                />
               </svg>
             </button>
           </div>
