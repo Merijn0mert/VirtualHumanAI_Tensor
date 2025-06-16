@@ -139,29 +139,48 @@ categoryCodes.forEach((code, index) => {
 
 // Main chat handler using semantic search + enhanced scoring
 export async function chatHandler(prompt: string, history: any[] = []) {
+  const articleOptions = rowsWithEmbeddings.map(({ row }) => ({
+    title: row[1],
+    description: row[3],
+    category: row[24],
+  }));
+
   const messages = [
     {
       role: "system",
       content: `
-You are a helpful, compassionate assistant named Janick. 
-You talk like a human, ask empathetic follow-up questions, and recommend useful articles only when you're sure they help. Keep the language you use simple and short.
+You are Janick, a warm, compassionate assistant.
+Speak naturally and kindly, like a caring human. Ask thoughtful, empathetic questions to understand the user's needs.
+You are here to recommend articles — not give advice yourself.
 
-At the end of every message, include one of the following category codes to indicate what the user is talking about:
+You may recommend **ONE** article ONLY IF:
+- The user clearly asks for help or information (e.g. "Can you help me?", "Do you have something I can read?")
+- AND you're confident that one of the available articles **directly addresses their exact issue**
 
-- [g] health & fitness (eating healthy, sleep, fitness, illness, addiction, sex, etc.)
-- [m] mental health (stress, setbacks, happiness, brain health, self-esteem)
-- [z] meaningful life (career, learning, motivation, planning, post-retirement)
-- [k] quality of life (balance, joy, safety)
-- [c] contact with others (relationships, care, diversity, community)
-- [j] self-reliance (money, time, parenting, independence, tech)
+If you're not sure — ask more questions or offer supportive responses, but DO NOT guess or recommend the wrong article.
+
+When recommending, include this special format exactly:
+[article: "TITLE OF ARTICLE"]
+
+Never recommend more than one article at a time.
+Never invent articles. Use ONLY the following list:
+
+${articleOptions.map((a) => `- "${a.title}" (${a.category})`).join("\n")}
+
+At the end of every message, include one of the following category codes:
+
+- [g] health & fitness
+- [m] mental health
+- [z] meaningful life
+- [k] quality of life
+- [c] contact with others
+- [j] self-reliance
 - [d] unclear or general
 
 Examples:
-- "That sounds like a tough situation. Can you tell me more? [m]"
-- "Here's something that might help you feel better at work: [z]"
-
-NEVER explain the categories — just include the correct one at the end of your message.
-Only suggest an article if you're sure it's helpful in that moment.
+- "What do you usually have for breakfast? [g]"
+- "Can I ask how long you've been feeling this way? [m]"
+- "This guide might help you feel more in control: [article: "Regaining control over your finances"] [j]"
 `,
     },
     ...history,
@@ -169,42 +188,25 @@ Only suggest an article if you're sure it's helpful in that moment.
   ];
 
   const result = await openai.chat.completions.create({
-    model: "gpt-4o",
+    model: "gpt-4o-mini",
     messages,
   });
 
   const rawMessage = result.choices[0].message?.content?.trim() || "I'm not sure how to respond. [d]";
-
-  // Extract category code like [g], [m], etc.
   const categoryMatch = rawMessage.match(/\[(g|m|z|k|c|j|d)\]/i);
   const categoryCode = categoryMatch ? `[${categoryMatch[1].toLowerCase()}]` : "[d]";
-  const categoryName = categoryCodeToName[categoryCode] ?? "Unknown";
-
-  // Should we suggest an article? You can customize this:
-  const shouldSuggestArticle = /article|this might help|could help|check this/i.test(rawMessage);
-
-  let article = null;
   const removeColorCode = (text: string) => text.replace(/\[[gmzkcjd]\]/gi, "").trim();
 
-  if (shouldSuggestArticle) {
-    const queryEmbedding = await getEmbedding(prompt);
-    let bestRow: any[] | null = null;
-    let bestSimilarity = -Infinity;
-
-    for (const { row, embedding } of rowsWithEmbeddings) {
-      if (row[24] !== categoryName) continue;
-
-      const similarity = cosineSimilarity(queryEmbedding, embedding);
-      if (similarity > bestSimilarity) {
-        bestSimilarity = similarity;
-        bestRow = row;
-      }
-    }
-
-    if (bestRow) {
+  // 🔍 Article extraction
+  let article = null;
+  const articleMatch = rawMessage.match(/\[article:\s*"(.+?)"\]/i);
+  if (articleMatch) {
+    const articleTitle = articleMatch[1].toLowerCase();
+    const found = rowsWithEmbeddings.find(({ row }) => (row[1] || "").toLowerCase() === articleTitle);
+    if (found) {
       article = {
-        title: bestRow[1] || "Untitled",
-        link: bestRow[6] || "No link",
+        title: found.row[1],
+        link: found.row[6],
       };
     }
   }
@@ -213,6 +215,5 @@ Only suggest an article if you're sure it's helpful in that moment.
     message: removeColorCode(rawMessage),
     colorCode: categoryCode,
     article,
-
   };
 }
