@@ -184,6 +184,7 @@ Only suggest an article if you're sure it's helpful in that moment.
   const shouldSuggestArticle = /article|this might help|could help|check this/i.test(rawMessage);
 
   let article = null;
+  const removeColorCode = (text: string) => text.replace(/\[[gmzkcjd]\]/gi, "").trim();
 
   if (shouldSuggestArticle) {
     const queryEmbedding = await getEmbedding(prompt);
@@ -209,7 +210,9 @@ Only suggest an article if you're sure it's helpful in that moment.
   }
 
   return {
-    message: rawMessage,
+    message: removeColorCode(rawMessage),
+    colorCode: categoryCode,
     article,
+
   };
 }

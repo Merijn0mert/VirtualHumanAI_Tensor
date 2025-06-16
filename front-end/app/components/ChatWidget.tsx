@@ -4,20 +4,26 @@ import { useRef, useState, useEffect } from "react";
 
 const emojis = ["😊", "🙂", "😐", "😕", "😢"];
 
-// Map color codes to hex values
 const COLOR_MAP: Record<string, string> = {
-  g: "#DE2B37", // red
-  m: "#50C4EE", // blue
-  z: "#6F47D1", // purple
-  k: "#FFC823", // yellow
-  c: "#FF7A1A", // orange
-  j: "#00D16B", // green
-  d: "#001F3F" // navy/default
+  g: "#DE2B37",
+  m: "#50C4EE",
+  z: "#6F47D1",
+  k: "#FFC823",
+  c: "#FF7A1A",
+  j: "#00D16B",
+  d: "#001F3F",
 };
+
+type MessageType = "user" | "agent";
+interface Message {
+  type: MessageType;
+  content: string;
+  isHTML?: boolean;
+}
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState<Message[]>([
     {
       type: "agent",
       content: "Hi there i am here to help you 👋",
@@ -25,8 +31,6 @@ export default function ChatWidget() {
   ]);
   const [inputValue, setInputValue] = useState("");
   const [isRecording, setIsRecording] = useState(false);
-
-  // Keep track of last 3 gradient colors for header
   const [gradientColors, setGradientColors] = useState<string[]>([
     COLOR_MAP.d,
     COLOR_MAP.d,
@@ -36,7 +40,6 @@ export default function ChatWidget() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
 
-  // Helper to extract color code from bot message, e.g. "[g]"
   const extractColorCode = (text: string): string | null => {
     const match = text.match(/\[([gmzkcjd])\]/i);
     if (match && COLOR_MAP[match[1].toLowerCase()]) {
@@ -44,9 +47,7 @@ export default function ChatWidget() {
     }
     return null;
   };
-  const removeColorCode = (text: string) => text.replace(/\[[gmzkcj]\]/gi, "").trim();
 
-  // When messages change, check last bot message for color code and update gradientColors
   useEffect(() => {
     const lastBotMessage = [...messages].reverse().find((m) => m.type === "agent");
     if (!lastBotMessage) return;
@@ -54,9 +55,7 @@ export default function ChatWidget() {
     const color = extractColorCode(lastBotMessage.content);
     if (color) {
       setGradientColors((prevColors) => {
-        // Prevent duplicates in a row
         if (prevColors[prevColors.length - 1] === color) return prevColors;
-
         const newColors = [...prevColors, color];
         if (newColors.length > 3) newColors.shift();
         return newColors;
@@ -68,7 +67,7 @@ export default function ChatWidget() {
     e.preventDefault();
     if (!inputValue.trim()) return;
 
-    const userMessage = { type: "user", content: inputValue };
+    const userMessage: Message = { type: "user", content: inputValue };
     setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
 
@@ -78,7 +77,7 @@ export default function ChatWidget() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           prompt: inputValue,
-          history: messages.map((m) => ({
+          history: [...messages, userMessage].map((m) => ({
             role: m.type === "user" ? "user" : "assistant",
             content: m.content,
           })),
@@ -86,24 +85,33 @@ export default function ChatWidget() {
       });
 
       const data = await res.json();
+      const color = extractColorCode(data.reply.colorCode)
+      if (color) {
+      setGradientColors((prevColors) => {
+        if (prevColors[prevColors.length - 1] === color) return prevColors;
+        const newColors = [...prevColors, color];
+        if (newColors.length > 3) newColors.shift();
+        return newColors;
+      });
+    }
       const replyContent =
         typeof data.reply === "string" ? data.reply : data.reply.message;
       const articleData =
         typeof data.reply === "object" && data.reply.article ? data.reply.article : null;
 
-      const aiMessage = { type: "agent", content: replyContent };
-      const updatedMessages = [...messages, userMessage, aiMessage];
+      let combinedContent = replyContent;
 
       if (articleData) {
-        const articleMessage = {
-          type: "agent",
-          content: `📄 <a href="${articleData.link}" target="_blank" class="underline text-blue-300">${articleData.title}</a>`,
-          isHTML: true,
-        };
-        updatedMessages.push(articleMessage);
+        combinedContent += `\n\n📄 <a href="${articleData.link}" target="_blank" class="underline text-blue-300">${articleData.title}</a>`;
       }
 
-      setMessages(updatedMessages);
+      const aiMessage: Message = {
+        type: "agent",
+        content: combinedContent,
+        isHTML: !!articleData,
+      };
+
+      setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
       console.error("AI fetch failed:", error);
       setMessages((prev) => [
@@ -142,7 +150,7 @@ export default function ChatWidget() {
       setTimeout(() => {
         mediaRecorder.stop();
         setIsRecording(false);
-      }, 5000); // Auto-stop after 5s
+      }, 5000);
     } catch (err) {
       console.error("Microphone access denied or error:", err);
     }
@@ -160,19 +168,14 @@ export default function ChatWidget() {
       const data = await res.json();
 
       const transcript = data.transcript;
-      console.log(transcript);
-      const userMessage = { type: "user", content: transcript };
-
-      // Add user message first
+      const userMessage: Message = { type: "user", content: transcript };
       setMessages((prev) => [...prev, userMessage]);
 
-      // Get current history for the chat API call
       const currentHistory = messages.concat(userMessage).map((m) => ({
         role: m.type === "user" ? "user" : "assistant",
         content: m.content,
       }));
 
-      // Send to chat endpoint
       const chatRes = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -183,54 +186,40 @@ export default function ChatWidget() {
       });
 
       const chatData = await chatRes.json();
-      const aiMessage = { type: "agent", content: chatData.reply };
-      const updatedMessages = [...messages, userMessage, aiMessage];
+
+      let combinedContent = chatData.reply.message;
 
       if (chatData.article) {
-        const articleMessage = {
-          type: "agent",
-          content: `📄 <a href="${chatData.article.link}" target="_blank" class="underline text-blue-300">${chatData.article.title}</a>`,
-          isHTML: true,
-        };
-        updatedMessages.push(articleMessage);
+        combinedContent += `\n\n📄 <a href="${chatData.article.link}" target="_blank" class="underline text-blue-300">${chatData.article.title}</a>`;
       }
 
-      setMessages(updatedMessages);
+      const aiMessage: Message = {
+        type: "agent",
+        content: combinedContent,
+        isHTML: !!chatData.article,
+      };
 
+      setMessages((prev) => [...prev, aiMessage]);
 
       const playAudioFromApi = async (text: string) => {
-      try {
-        const res = await fetch("/api/text_to_speech", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
-        });
-
-        if (!res.ok) {
-          throw new Error("TTS API error");
+        try {
+          const res = await fetch("/api/text_to_speech", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text }),
+          });
+          if (!res.ok) throw new Error("TTS API error");
+          const audioBlob = await res.blob();
+          const audioUrl = URL.createObjectURL(audioBlob);
+          const audio = new Audio(audioUrl);
+          audio.play();
+          audio.onended = () => URL.revokeObjectURL(audioUrl);
+        } catch (err) {
+          console.error("Failed to play audio:", err);
         }
+      };
 
-        // Get audio as Blob
-        const audioBlob = await res.blob();
-
-        // Create URL for audio playback
-        const audioUrl = URL.createObjectURL(audioBlob);
-
-        // Play audio using Audio API
-        const audio = new Audio(audioUrl);
-        audio.play();
-
-        // Optional: revoke URL after playback to free memory
-        audio.onended = () => {
-          URL.revokeObjectURL(audioUrl);
-        };
-      } catch (err) {
-        console.error("Failed to play audio:", err);
-      }
-    };
-
-      // Optional: Text-to-speech
-      await playAudioFromApi(chatData.reply);
+      await playAudioFromApi(chatData.reply.message);
     } catch (error) {
       console.error("Speech API failed:", error);
       setMessages((prev) => [
@@ -266,53 +255,32 @@ export default function ChatWidget() {
     );
   }
 
-  // Create dynamic gradient style from colors array
   const gradientStyle = {
     background: `linear-gradient(90deg, ${gradientColors.join(", ")})`,
   };
 
   return (
     <div className="fixed bottom-6 right-6 w-[350px] bg-navy-900 rounded-lg shadow-xl">
-      {/* Header */}
-      <div
-        className="flex items-center justify-between p-4 rounded-t-lg"
-        style={gradientStyle}
-      >
+      <div className="flex items-center justify-between p-4 rounded-t-lg " style={gradientStyle}>
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-navy-700 rounded-full"></div>
           <div>
             <h3 className="text-white font-medium">Janick</h3>
-            <p className="text-xs text-gray-400">De stap AI agent</p>
+            <p className="text-xs text-white">De stap AI agent</p>
           </div>
         </div>
-        <button
-          onClick={() => setIsOpen(false)}
-          className="text-gray-400 hover:text-white"
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
+        <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
 
-      {/* Chat messages */}
       <div className="h-[400px] overflow-y-auto p-4 flex flex-col gap-4">
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`flex ${
-              message.type === "user" ? "justify-end" : "justify-start"
-            }`}
+            className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
               className={`max-w-[80%] rounded-lg p-3 ${
@@ -321,23 +289,23 @@ export default function ChatWidget() {
                   : "bg-navy-700 text-white"
               }`}
             >
-              {message.content}
+              {message.isHTML ? (
+                <span dangerouslySetInnerHTML={{ __html: message.content }} />
+              ) : (
+                message.content
+              )}
             </div>
           </div>
         ))}
         <div className="flex flex-wrap gap-2 justify-center">
           {emojis.map((emoji, index) => (
-            <button
-              key={index}
-              className="w-8 h-8 flex items-center justify-center hover:bg-navy-700 rounded-full"
-            >
+            <button key={index} className="w-8 h-8 flex items-center justify-center hover:bg-navy-700 rounded-full">
               {emoji}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Input area */}
       <form onSubmit={handleSubmit} className="p-4 border-t border-navy-700">
         <div className="relative">
           <input
@@ -353,17 +321,10 @@ export default function ChatWidget() {
               onClick={startRecording}
               disabled={isRecording}
               className={`p-1 rounded-full transition-colors ${
-                isRecording
-                  ? "text-red-500 bg-red-100"
-                  : "text-gray-400 hover:text-green-400"
+                isRecording ? "text-red-500 bg-red-100" : "text-gray-400 hover:text-green-400"
               }`}
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -372,22 +333,9 @@ export default function ChatWidget() {
                 />
               </svg>
             </button>
-            <button
-              type="submit"
-              className="p-1 text-blue-500 hover:text-blue-400 transition-colors"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                />
+            <button type="submit" className="p-1 text-blue-500 hover:text-blue-400 transition-colors">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
             </button>
           </div>
