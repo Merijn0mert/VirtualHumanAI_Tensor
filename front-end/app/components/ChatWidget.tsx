@@ -38,7 +38,7 @@ export default function ChatWidget() {
 
   // Helper to extract color code from bot message, e.g. "[g]"
   const extractColorCode = (text: string): string | null => {
-    const match = text.match(/\[([gmzkcj])\]/i);
+    const match = text.match(/\[([gmzkcjd])\]/i);
     if (match && COLOR_MAP[match[1].toLowerCase()]) {
       return COLOR_MAP[match[1].toLowerCase()];
     }
@@ -85,8 +85,24 @@ export default function ChatWidget() {
       });
 
       const data = await res.json();
-      const aiMessage = { type: "agent", content: data.reply };
-      setMessages((prev) => [...prev, aiMessage]);
+      const replyContent =
+        typeof data.reply === "string" ? data.reply : data.reply.message;
+      const articleData =
+        typeof data.reply === "object" && data.reply.article ? data.reply.article : null;
+
+      const aiMessage = { type: "agent", content: replyContent };
+      const updatedMessages = [...messages, userMessage, aiMessage];
+
+      if (articleData) {
+        const articleMessage = {
+          type: "agent",
+          content: `📄 <a href="${articleData.link}" target="_blank" class="underline text-blue-300">${articleData.title}</a>`,
+          isHTML: true,
+        };
+        updatedMessages.push(articleMessage);
+      }
+
+      setMessages(updatedMessages);
     } catch (error) {
       console.error("AI fetch failed:", error);
       setMessages((prev) => [
@@ -167,9 +183,18 @@ export default function ChatWidget() {
 
       const chatData = await chatRes.json();
       const aiMessage = { type: "agent", content: chatData.reply };
+      const updatedMessages = [...messages, userMessage, aiMessage];
 
-      // Add AI response
-      setMessages((prev) => [...prev, aiMessage]);
+      if (chatData.article) {
+        const articleMessage = {
+          type: "agent",
+          content: `📄 <a href="${chatData.article.link}" target="_blank" class="underline text-blue-300">${chatData.article.title}</a>`,
+          isHTML: true,
+        };
+        updatedMessages.push(articleMessage);
+      }
+
+      setMessages(updatedMessages);
 
       // Optional: Text-to-speech
       try {

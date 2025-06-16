@@ -18,108 +18,6 @@ type ExcelRow = {
   [key: string]: any; // For Column 24 or any extra columns
 };
 
-/*function loadLinksFromExcel(filePath: string) {
-  if (!fs.existsSync(filePath)) {
-    console.error(`❌ Excel file not found: ${filePath}`);
-    return {};
-  }
-  console.log("Excel path:", filePath);
-  console.log("File exists?", fs.existsSync(filePath));
-
-  const fileBuffer = fs.readFileSync(filePath);
-
-// Parse buffer to workbook
-  const workbook = XLSX.read(fileBuffer, {type: 'buffer'});
-
-  const sheetName = workbook.SheetNames[0];
-  const sheet = workbook.Sheets[sheetName];
-
-// Now you can process the sheet data
-  const data = XLSX.utils.sheet_to_json(sheet);
-  const rows = XLSX.utils.sheet_to_json(sheet, {header: 1}) as (string | number | undefined)[][];
-  const categoryColumn = rows.map(row => row[24])
-  const uniqueCategories = Array.from(new Set(categoryColumn)).filter(cat => !cat.includes('|'))
-  const categoryLinks: Record<string, { Link: string; Description: string }[]> = {};
-  const links = rows.map(row => row[6])
-
-  const categoryCodeMap: Record<string, string> = {
-      "Gezond en fit": "[g]",
-      "mentaal sterk": "[m]",
-      "Zinvol leven": "[z]",
-      "Positieve gezondheid": "[k]",
-      "Contact met andere": "[c]",
-      "Voor jezelf zorgen": "[j]",
-    };
-
-
-  // Extract rows where column 24 === "Gezond en fit"
-  const targetCategory = "Gezond en fit";
-  const zooi = "[g]";
-  rows.forEach((row) => {
-    if (row[24] === categoryCodeMap[zooi]) {
-      console.log('first row ', row[24],': ', row[1]); // First column
-    }
-  });*/
-
-
-  /*for (const row of data) {
-// column Y (zero-based index 24)
-    const link = rows.map(row => row[6]);    // adjust index if 'Link' is in another column
-    const description = rows.map(row => row[3]);  // adjust index for 'Description'
-
-    //const data = XLSX.utils.sheet_to_json<ExcelRow>(sheet);
-    const categorizedLinks: Record<string, { Link: string; Description: string; Column24?: any }[]> = {};
-
-    for (const column of data) {
-      const category = column.Category; // e.g., '[g]', '[m]', etc.
-      if (!category) continue;
-
-      const col24 = column["Column 24 Header"] || column[Object.keys(column)[23]]; // Tries name first, then 24th field
-      if (!categorizedLinks[category]) categorizedLinks[category] = [];
-
-      categorizedLinks[category].push({
-        Link: column.Link ?? "No link",
-        Description: column.Description ?? "No description",
-        Column24: col24,
-      });
-    }
-    return categorizedLinks;
-  }*/
-//}
-
-// Load once at startup
-  //const categorizedLinks = loadLinksFromExcel(excelPath);
-
- /* export async function chatHandler(prompt: string, history: any[] = []) {
-    const messages = [
-      {
-        role: "system",
-        content: `
-        you have to return the following and the following only,
-        if a user in the current message is talking about their health and fitness ... return '[g]'
-        if a user in the current message is talking about their mental health ... return '[m]'
-        if a user in the current message is talking about their meaningful life ... return '[z]'
-        if a user in the current message is talking about their quality of life ... return '[k]'
-        if a user in the current message is talking about their contact with others ... return '[c]'
-        if a user in the current message is talking about caring about themselves ... return '[j]'
-      `,
-      },
-      ...history,
-      {role: "user", content: prompt},
-    ];
-
-    const chat = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages,
-    });
-
-    const category = chat.choices[0].message?.content?.trim();
-    console.log("Detected category:", category);
-
-    return category ?? "uhhh";
-  }*/
-// Somewhere global or imported:
-// Add near your imports
 let rows: any[][] = [];
 let dataRows: any[][] = [];
 
@@ -197,7 +95,7 @@ function getCachedEmbeddingForRow(row: any[]): number[] {
 }
 
 // Your enhancedScore function, slightly improved with critical word multiplier
-function enhancedScore(userPromptEmbedding: number[], promptWords: string[], row: any[]): number {
+/*function enhancedScore(userPromptEmbedding: number[], promptWords: string[], row: any[]): number {
   const description = (row[3] || "").toLowerCase();
   const descriptionWords = new Set(description.split(/\W+/));
 
@@ -223,7 +121,7 @@ function enhancedScore(userPromptEmbedding: number[], promptWords: string[], row
 
   // Weighted final score
   return similarity * 0.7 + keywordScore * 0.3;
-}
+}*/
 
 // Setup on startup
 loadExcelData();
@@ -231,7 +129,7 @@ loadExcelData();
 await prepareEmbeddingsForRows();
 
 // Category map from earlier
-const categoryCodes = ["[c]", "[m]", "[g]", "[j]", "[k]", "[z]"];
+const categoryCodes = ["[c]", "[m]", "[g]", "[j]", "[k]", "[z]", "[d]"];
 const categoryCodeToName: Record<string, string> = {};
 const uniqueCategories = Array.from(new Set(dataRows.map(r => r[24]))).filter(c => !c.includes("|"));
 
@@ -245,80 +143,73 @@ export async function chatHandler(prompt: string, history: any[] = []) {
     {
       role: "system",
       content: `
-        you have to return the following and the following only,
-        if a user in the current message is talking about their health and fitness (think of topics like eating healthy, sleeping well, stay fit, dealing with illness, smoking, alcohol, drugs, gambling, sex and intimacy) return '[g]'
-        if a user in the current message is talking about their mental health (think of topics like less stress, coming up for yourself, dealing with setbacks, healthy brain, happy with yourself) return '[m]'
-        if a user in the current message is talking about their meaningful life (think of your own life, work, learning, getting your shit together, after your pension) return '[z]'
-        if a user in the current message is talking about their quality of life (think of staying in balance, enjoying, feeling safe) return '[k]'
-        if a user in the current message is talking about their contact with others (think of topics like staying in contact, elder care, difference between people, participating in the neighbourhood, volunteer work) return '[c]'
-        if a user in the current message is talking about caring about themselves (think of topics like handling money, dividing their time, raising kids, being able to live on their own, using computers) return '[j]'
-      `,
+You are a helpful, compassionate assistant named Vita. 
+You talk like a human, ask empathetic follow-up questions, and recommend useful articles only when you're sure they help.
+
+At the end of every message, include one of the following category codes to indicate what the user is talking about:
+
+- [g] health & fitness (eating healthy, sleep, fitness, illness, addiction, sex, etc.)
+- [m] mental health (stress, setbacks, happiness, brain health, self-esteem)
+- [z] meaningful life (career, learning, motivation, planning, post-retirement)
+- [k] quality of life (balance, joy, safety)
+- [c] contact with others (relationships, care, diversity, community)
+- [j] self-reliance (money, time, parenting, independence, tech)
+- [d] unclear or general
+
+Examples:
+- "That sounds like a tough situation. Can you tell me more? [m]"
+- "Here's something that might help you feel better at work: [z]"
+
+NEVER explain the categories — just include the correct one at the end of your message.
+Only suggest an article if you're sure it's helpful in that moment.
+`,
     },
     ...history,
     { role: "user", content: prompt },
   ];
-  const promptWords = prompt.toLowerCase().split(/\W+/).filter(w => w.length > 2);
 
   const result = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: "gpt-4o",
     messages,
   });
 
-  const validCategories = ["[g]", "[m]", "[z]", "[k]", "[c]", "[j]"];
-  const criticalWords = ["suicide", "jump", "bridge", "cutting", "self-harm", "kill", "depressed", "die"];
-  const categoryCode = result.choices[0].message?.content?.trim();
-  const hasCriticalWord = promptWords.some(word => criticalWords.includes(word));
+  const rawMessage = result.choices[0].message?.content?.trim() || "I'm not sure how to respond. [d]";
 
-  if (!categoryCode || !validCategories.includes(categoryCode)) {
-    if (hasCriticalWord) {
-      const empathicPrompt = `
-            You are a compassionate assistant. The user might be feeling suicidal or in crisis.
-            Please respond with empathy, encouragement, and recommend calling the suicide prevention hotline (113).
-            Make sure the tone is gentle and supportive.
-            Here is the user message:
-            "${prompt}"
-          `;
+  // Extract category code like [g], [m], etc.
+  const categoryMatch = rawMessage.match(/\[(g|m|z|k|c|j|d)\]/i);
+  const categoryCode = categoryMatch ? `[${categoryMatch[1].toLowerCase()}]` : "[d]";
+  const categoryName = categoryCodeToName[categoryCode] ?? "Unknown";
 
-          const empathicResponse = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [
-              { role: "system", content: "You are a compassionate and empathetic assistant." },
-              { role: "user", content: empathicPrompt },
-            ],
-          });
+  // Should we suggest an article? You can customize this:
+  const shouldSuggestArticle = /article|this might help|could help|check this/i.test(rawMessage);
 
-          return empathicResponse.choices[0].message?.content ?? "I'm here to help. Please consider calling the suicide prevention hotline at 113.";
-    } else {
-      return `😕 Sorry, I couldn't understand what you’re asking. Can you rephrase it?`;
+  let article = null;
+
+  if (shouldSuggestArticle) {
+    const queryEmbedding = await getEmbedding(prompt);
+    let bestRow: any[] | null = null;
+    let bestSimilarity = -Infinity;
+
+    for (const { row, embedding } of rowsWithEmbeddings) {
+      if (row[24] !== categoryName) continue;
+
+      const similarity = cosineSimilarity(queryEmbedding, embedding);
+      if (similarity > bestSimilarity) {
+        bestSimilarity = similarity;
+        bestRow = row;
+      }
+    }
+
+    if (bestRow) {
+      article = {
+        title: bestRow[1] || "Untitled",
+        link: bestRow[6] || "No link",
+      };
     }
   }
 
-
-
-  const categoryName = categoryCodeToName[categoryCode];
-  const queryEmbedding = await getEmbedding(prompt);
-
-
-
-  let bestRow: any[] | null = null;
-  let bestScore = -Infinity;
-
-  for (const { row, embedding } of rowsWithEmbeddings) {
-    if (row[24] !== categoryName) continue;
-
-    const score = enhancedScore(queryEmbedding, promptWords, row);
-    if (score > bestScore) {
-      bestScore = score;
-      bestRow = row;
-    }
-  }
-
-  if (!bestRow) {
-    return `No results found in category "${categoryName}".`;
-  }
-
-  const title = bestRow[1] || "Untitled";
-  const link = bestRow[6] || "No link";
-
-  return `📌 **${title}**\n🔗 ${link}`;
+  return {
+    message: rawMessage,
+    article,
+  };
 }
