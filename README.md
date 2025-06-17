@@ -54,9 +54,10 @@ Create a **conversational AI assistant** that:
 - **Add api keys**: Add the API keys in the .env folder as seen here:
   - OPENAI_API_KEY=INSERT_YOUR_OWN_KEY_HERE
   - ELEVENLABS_API_KEY=INSERT_YOUR_OWN_KEY_HERE
-- **CD**: Type the command CD front-end
-- **Install packages**: Type npm install
-- **Start application**: Use command npm run dev
+- **Open terminal**: Open the terminal for the following commands (In this order).
+- **Go to folder**:'cd front-end'
+- **Install packages**:'npm install'
+- **Start application**:'npm run dev'
 - **Open application**: Go to the localhost or IP-adress in the command line. The application should work then
 - **Chatbot data embedding**: After sending the first message it takes a while for the chatbot to react. This is because of the AI generating and embedding the data. He only needs to do this once.
 - **Start chatting**: Now you are free to have a conversation with the AI (Watch the tokens tho. especcialy with the speech function).
