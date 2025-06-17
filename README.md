@@ -48,7 +48,7 @@ Create a **conversational AI assistant** that:
 
 ---
 
-## 🧪 Start project
+## 🚀 Start project
 
 - **Environment**: Make a .env file in the front-end folder
 - **Add api keys**: Add the API keys in the .env folder as seen here:
