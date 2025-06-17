@@ -58,7 +58,8 @@ Create a **conversational AI assistant** that:
 - **Install packages**: Type npm install
 - **Start application**: Use command npm run dev
 - **Open application**: Go to the localhost or IP-adress in the command line. The application should work then
-- **Chatbot data embedding**: After sending the first message it takes a while for the chatbot to react. This is because of the AI generating and embedding the data. He only needs to do this once. 
+- **Chatbot data embedding**: After sending the first message it takes a while for the chatbot to react. This is because of the AI generating and embedding the data. He only needs to do this once.
+- **Start chatting**: Now you are free to have a conversation with the AI (Watch the tokens tho. especcialy with the speech function).
 
 ---
 
