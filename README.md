@@ -48,6 +48,19 @@ Create a **conversational AI assistant** that:
 
 ---
 
+## 🧪 Start project
+
+- **Environment**: Make a .env file in the front-end folder
+- **Add api keys**: Add the API keys in the .env folder as seen here:
+  - OPENAI_API_KEY=INSERT_YOUR_OWN_KEY_HERE
+  - ELEVENLABS_API_KEY=INSERT_YOUR_OWN_KEY_HERE
+- **CD**: Type the command CD front-end
+- **Install packages**: Type npm install
+- **Start application**: Use command npm run dev
+- **Open application**: Go to the localhost or IP-adress in the command line. The application should work then
+
+---
+
 ## 🧭 Implementation Plan
 
 1. **Data Collection**
