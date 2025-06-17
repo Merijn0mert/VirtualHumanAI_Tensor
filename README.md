@@ -97,7 +97,6 @@ Create a **conversational AI assistant** that:
 | Sam Deen           | Team Leader / Secondary Notes|
 | Merijn Wilgehof    | Spokesperson / Primary Notes |
 | Viktor Velizarov   | Scrum Master                 |
-| Mahmoud Turkmani   | Quality Assurance            |
 
 ---
 
