@@ -37,7 +37,7 @@ Create a **conversational AI assistant** that:
 
 ## 🧪 Technical Overview
 
-- **AI Framework**: TensorFlow
+- **AI Framework**: GPT-4o-mini
 - **Model Type**: Natural Language Understanding (NLU) and Recommendation System
 - **Interface**: Chatbot (web-based or voice-assisted)
 - **Training Dataset**:
@@ -49,7 +49,7 @@ Create a **conversational AI assistant** that:
 ---
 
 ## 🚀 Start project
-
+- **Node:** install node from the official website [nodejs.org](https://nodejs.org/en) and make sure to download at least version 20
 - **Environment**: Make a .env file in the front-end folder
 - **Add api keys**: Add the API keys in the .env folder as seen here:
   - OPENAI_API_KEY=INSERT_YOUR_OWN_KEY_HERE
@@ -120,5 +120,5 @@ Create a **conversational AI assistant** that:
 
 ## ✅ Conclusion
 
-The Virtual Human project is more than a digital assistant—it’s a **gateway to health empowerment**. By combining TensorFlow-based AI with a user-friendly interface, it aims to break down health information barriers and encourage healthier lifestyles for everyone, regardless of literacy level.
+The Virtual Human project is more than a digital assistant—it’s a **gateway to health empowerment**. By combining GPT-4o-mini based AI with a user-friendly interface, it aims to break down health information barriers and encourage healthier lifestyles for everyone, regardless of literacy level.
 
