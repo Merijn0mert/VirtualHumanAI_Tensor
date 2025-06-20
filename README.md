@@ -27,11 +27,11 @@ Create a **conversational AI assistant** that:
 
 ## 🛠️ Key Features
 
-- 🤖 **AI-powered assistant** for guiding users.
-- 🗣️ **Simple, accessible dialogue** with the user.
-- 🧩 **Personalized content** recommendation.
-- 🌍 **Multilingual support** for better reach (optional future step).
-- 📈 **Engagement tracking** to evaluate performance.
+- **AI-powered assistant** for guiding users.
+- **Simple, accessible dialogue** with the user.
+- **Personalized content** recommendation.
+- **Multilingual support** for better reach (optional future step).
+- **Engagement tracking** to evaluate performance.
 
 ---
 
@@ -83,10 +83,10 @@ Create a **conversational AI assistant** that:
 
 ## 📊 Measuring Success
 
-- ⏱️ Increased time spent on relevant pages
-- 📈 Higher click-through and interaction rates
-- ✅ Improved user understanding (measured via surveys or behavior)
-- 🧠 Ability to make independent health-related decisions
+- Increased time spent on relevant pages
+- Higher click-through and interaction rates
+- Improved user understanding (measured via surveys or behavior)
+- Ability to make independent health-related decisions
 
 ---
 
